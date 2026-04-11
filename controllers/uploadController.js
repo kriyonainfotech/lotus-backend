@@ -1,22 +1,7 @@
+import { storage } from '../config/cloudinary.js';
 import multer from 'multer';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Configure Storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-// File Filter
+// File Filter (Optional if you already filter in Cloudinary storage but good for consistency)
 const fileFilter = (req, file, cb) => {
   const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
   if (allowedTypes.includes(file.mimetype)) {
@@ -42,13 +27,12 @@ export const handleUpload = async (req, res) => {
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
-    // Construct the public URL
-    // Note: In production you might want to use a full domain name
-    const fileUrl = `/uploads/${req.file.filename}`;
+    // Cloudinary returns the URL in req.file.path or req.file.secure_url
+    const fileUrl = req.file.path;
 
     return res.status(200).json({
       success: true,
-      message: 'File uploaded successfully',
+      message: 'File uploaded successfully to Cloudinary',
       url: fileUrl
     });
   } catch (error) {
@@ -56,3 +40,4 @@ export const handleUpload = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
+
