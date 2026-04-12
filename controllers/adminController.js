@@ -14,12 +14,12 @@ export const getAllUsers = async (req, res) => {
 export const createUser = async (req, res) => {
   try {
     const { name, email, phoneNumber, designation, firebaseUid, role } = req.body;
-    
+
     // Check if user already exists
-    const existingUser = await User.findOne({ 
-      $or: [{ email }, { firebaseUid }, { phoneNumber }] 
+    const existingUser = await User.findOne({
+      $or: [{ email }, { firebaseUid }, { phoneNumber }]
     });
-    
+
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists with this email, UID or phone' });
     }
@@ -46,11 +46,11 @@ export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
     const updatedUser = await User.findByIdAndUpdate(id, req.body, { new: true });
-    
+
     if (!updatedUser) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
+
     res.status(200).json(updatedUser);
   } catch (error) {
     res.status(400).json({ message: 'Error updating user', error: error.message });
@@ -62,11 +62,11 @@ export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
     const deletedUser = await User.findByIdAndDelete(id);
-    
+
     if (!deletedUser) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
+
     res.status(200).json({ message: 'User deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting user', error: error.message });
@@ -85,7 +85,7 @@ export const getDashboardStats = async (req, res) => {
       .select('name email role createdAt');
 
     // Calculate growth (mocked for now as we don't have historical data)
-    const growth = 12.5; 
+    const growth = 12.5;
 
     res.status(200).json({
       totalUsers,
@@ -95,6 +95,7 @@ export const getDashboardStats = async (req, res) => {
       growth
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: 'Error fetching stats', error: error.message });
   }
 };

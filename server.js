@@ -66,6 +66,16 @@ app.get('/', (req, res) => {
   res.json({ message: 'Lotus App Backend API is running successfully' });
 });
 
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled Error:', err);
+  res.status(500).json({
+    message: 'Internal Server Error',
+    error: err.message,
+    stack: process.env.NODE_ENV === 'production' ? null : err.stack
+  });
+});
+
 // Start Server
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
