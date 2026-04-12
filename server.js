@@ -31,13 +31,24 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Database Connection
-const mongoURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/lotus_app';
-mongoose.connect(mongoURI)
+const mongoURI = process.env.MONGODB_URI;
+
+if (!mongoURI) {
+  console.error('CRITICAL ERROR: MONGODB_URI is not defined in environment variables.');
+  console.log('Falling back to local mongodb for development check...');
+}
+
+mongoose.connect(mongoURI || 'mongodb://127.0.0.1:27017/lotus_app')
   .then(async () => {
     console.log('Successfully connected to MongoDB');
     await seedIndustries();
   })
-  .catch((err) => console.error('Error connecting to MongoDB:', err));
+  .catch((err) => {
+    console.error('MONGODB CONNECTION ERROR:', err.message);
+    if (err.message.includes('buffering timed out')) {
+      console.error('Tip: Check if your database URI is correct and if your network allows the connection.');
+    }
+  });
 
 const seedIndustries = async () => {
   try {
