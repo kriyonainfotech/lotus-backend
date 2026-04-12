@@ -1,10 +1,26 @@
 import User from '../models/User.js';
+import Business from '../models/Business.js';
 
 // Get all users
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().sort({ createdAt: -1 });
-    res.status(200).json(users);
+    const users = await User.find().sort({ createdAt: -1 }).lean();
+
+    // Get all businesses and map them by userId
+    const businesses = await Business.find().populate('industryId').lean();
+    const businessMap = {};
+    businesses.forEach(b => {
+      businessMap[b.userId.toString()] = b;
+    });
+
+    const usersWithBusiness = users.map(user => ({
+      ...user,
+      business: businessMap[user._id.toString()] || null
+    }));
+
+    console.log(usersWithBusiness, 'usersWithBusiness');
+
+    res.status(200).json(usersWithBusiness);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching users', error: error.message });
   }
@@ -13,7 +29,7 @@ export const getAllUsers = async (req, res) => {
 // Create user
 export const createUser = async (req, res) => {
   try {
-    const { name, email, phoneNumber, designation, firebaseUid, role } = req.body;
+    const { email, firebaseUid, phoneNumber, role, businessName, industryId } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({
@@ -25,16 +41,25 @@ export const createUser = async (req, res) => {
     }
 
     const newUser = new User({
-      name,
-      email,
-      phoneNumber,
-      designation,
+      ...req.body,
       role: role || 'user',
-      firebaseUid: firebaseUid || `manual_${Date.now()}`, // Temporary UID if not provided
+      firebaseUid: firebaseUid || `manual_${Date.now()}`,
       isProfileComplete: true
     });
 
     await newUser.save();
+
+    // Create business if info provided
+    if (businessName && industryId) {
+      await Business.create({
+        userId: newUser._id,
+        businessName,
+        industryId,
+        logoUrl: req.body.logoUrl || '',
+        contactPhone: req.body.contactPhone || phoneNumber
+      });
+    }
+
     res.status(201).json(newUser);
   } catch (error) {
     res.status(400).json({ message: 'Error creating user', error: error.message });
@@ -45,10 +70,32 @@ export const createUser = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
+    const { businessName, industryId, logoUrl, contactPhone } = req.body;
+
     const updatedUser = await User.findByIdAndUpdate(id, req.body, { new: true });
 
     if (!updatedUser) {
       return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update or create business
+    if (businessName || industryId) {
+      let business = await Business.findOne({ userId: id });
+      if (business) {
+        if (businessName) business.businessName = businessName;
+        if (industryId) business.industryId = industryId;
+        if (logoUrl !== undefined) business.logoUrl = logoUrl;
+        if (contactPhone !== undefined) business.contactPhone = contactPhone;
+        await business.save();
+      } else {
+        await Business.create({
+          userId: id,
+          businessName: businessName || 'My Business',
+          industryId,
+          logoUrl: logoUrl || '',
+          contactPhone: contactPhone || req.body.phoneNumber || ''
+        });
+      }
     }
 
     res.status(200).json(updatedUser);
