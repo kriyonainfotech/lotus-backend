@@ -6,6 +6,9 @@ import authRoutes from './routes/authRoutes.js';
 import onboardingRoutes from './routes/onboardingRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import templateRoutes from './routes/templateRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js';
+import appSettingsRoutes from './routes/appSettingsRoutes.js';
 import Industry from './models/Industry.js';
 import { initFirebase } from './config/firebaseAdmin.js';
 
@@ -18,10 +21,29 @@ const app = express();
 const PORT = process.env.PORT || 8000;
 
 // Middleware
+const allowedOrigins = [
+  'https://lotus-delta-six.vercel.app', 
+  'http://localhost:5173',
+  'http://localhost:5000'
+];
+
 app.use(cors({
-  origin: ['https://lotus-delta-six.vercel.app', 'http://localhost:5173'],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Allow local network IPs (192.168.x.x, 10.x.x.x, etc.) for mobile testing
+    const isLocalNetwork = /^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}):\d+$/.test(origin);
+    
+    if (allowedOrigins.includes(origin) || isLocalNetwork) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
+
 app.use(express.json());
 
 // Routes
@@ -29,6 +51,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/templates', templateRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/settings', appSettingsRoutes);
 
 // Database Connection
 const mongoURI = process.env.MONGODB_URI;

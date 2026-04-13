@@ -4,10 +4,30 @@ import Business from '../models/Business.js';
 // Get all users
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().sort({ createdAt: -1 }).lean();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const search = req.query.search || '';
 
-    // Get all businesses and map them by userId
-    const businesses = await Business.find().populate('industryId').lean();
+    const query = {};
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const totalUsers = await User.countDocuments(query);
+    const users = await User.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    // Get all businesses for these users
+    const userIds = users.map(u => u._id);
+    const businesses = await Business.find({ userId: { $in: userIds } }).populate('industryId').lean();
+    
     const businessMap = {};
     businesses.forEach(b => {
       businessMap[b.userId.toString()] = b;
@@ -18,9 +38,12 @@ export const getAllUsers = async (req, res) => {
       business: businessMap[user._id.toString()] || null
     }));
 
-    console.log(usersWithBusiness, 'usersWithBusiness');
-
-    res.status(200).json(usersWithBusiness);
+    res.status(200).json({
+      users: usersWithBusiness,
+      totalPages: Math.ceil(totalUsers / limit),
+      currentPage: page,
+      totalUsers
+    });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching users', error: error.message });
   }
