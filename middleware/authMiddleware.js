@@ -7,6 +7,7 @@ import { admin } from '../config/firebaseAdmin.js';
  * Usage in routes: router.get('/protected', protect, handler)
  */
 export const protect = async (req, res, next) => {
+  console.log('[AUTH] PROTECT MIDDLEWARE HIT');
   try {
     const authHeader = req.headers.authorization;
 

@@ -9,6 +9,9 @@ const ImageSchema = new mongoose.Schema({
   width: { type: Number },
   height: { type: Number },
   scale: { type: Number, default: 1 },
+  angle: { type: Number, default: 0 },
+  opacity: { type: Number, default: 1 },
+  zIndex: { type: Number, default: 0 },
   isBackground: { type: Boolean, default: false }
 });
 
@@ -16,12 +19,24 @@ const TextLayerSchema = new mongoose.Schema({
   text: { type: String, required: true },
   font: { type: String, default: 'Inter' },
   size: { type: Number, default: 20 },
+  sizeRatio: { type: Number },
   color: { type: String, default: '#000000' },
   x: { type: Number, default: 0.5 },
   y: { type: Number, default: 0.5 },
+  width: { type: Number },
+  height: { type: Number },
+  angle: { type: Number, default: 0 },
+  opacity: { type: Number, default: 1 },
+  zIndex: { type: Number, default: 0 },
   bold: { type: Boolean, default: false },
   italic: { type: Boolean, default: false },
-  alignment: { type: String, default: 'left' }
+  alignment: { type: String, default: 'left' },
+  textAlign: { type: String, default: 'left' },
+  letterSpacing: { type: Number, default: 0 },
+  lineHeight: { type: Number, default: 1.16 },
+  uppercase: { type: Boolean, default: false },
+  strokeColor: { type: String, default: '#000000' },
+  strokeWidth: { type: Number, default: 0 }
 });
 
 const templateSchema = new mongoose.Schema({
