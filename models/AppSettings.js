@@ -12,6 +12,34 @@ const appSettingsSchema = new mongoose.Schema({
   marqueeText: [{ 
     type: String 
   }],
+  privacyPolicy: {
+    type: String,
+    default: ''
+  },
+  termsAndConditions: {
+    type: String,
+    default: ''
+  },
+  aboutUs: {
+    type: String,
+    default: ''
+  },
+  faq: [{
+    question: { type: String, required: true },
+    answer: { type: String, required: true }
+  }],
+  customerCareEmail: {
+    type: String,
+    default: 'support@lotus.digital'
+  },
+  inviteMessage: {
+    type: String,
+    default: 'Create professional business designs with Lotus! Download now: '
+  },
+  storeLink: {
+    type: String,
+    default: 'https://lotus.digital/download'
+  },
   updatedAt: { 
     type: Date, 
     default: Date.now 
