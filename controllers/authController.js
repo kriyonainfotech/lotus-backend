@@ -58,3 +58,36 @@ export const getCurrentUser = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
+
+/**
+ * PUT /api/auth/fcm-token
+ * Updates the FCM token for the currently logged in user.
+ */
+export const updateFcmToken = async (req, res) => {
+  try {
+    const { firebaseUid } = req.user;
+    const { fcmToken } = req.body;
+
+    if (!fcmToken) {
+      return res.status(400).json({ success: false, message: 'FCM token is required' });
+    }
+
+    const user = await User.findOneAndUpdate(
+      { firebaseUid },
+      { fcmToken },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'FCM token updated successfully',
+    });
+  } catch (error) {
+    console.error('Error updating FCM token:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};

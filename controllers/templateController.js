@@ -39,9 +39,10 @@ export const createTemplate = async (req, res) => {
 // Get all templates with filtering
 export const getTemplates = async (req, res) => {
   try {
-    const { category, hero, date } = req.query;
+    const { category, hero, date, type } = req.query;
     let query = {};
 
+    if (type) query.type = type;
     if (category) query.categoryId = category;
     if (hero === 'true') query.isHeroSection = true;
     if (date && date !== 'all' && date !== 'scheduled') {

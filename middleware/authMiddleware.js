@@ -49,3 +49,45 @@ export const protect = async (req, res, next) => {
     });
   }
 };
+
+/**
+ * Middleware: Checks if the user has admin role.
+ * Should be used AFTER protect middleware.
+ */
+import User from '../models/User.js';
+
+export const isAdmin = async (req, res, next) => {
+  console.log(`[AUTH] isAdmin MIDDLEWARE HIT for UID: ${req.user.firebaseUid}`);
+  try {
+    const { firebaseUid } = req.user;
+
+    // Bypass for development mock admin
+    if (firebaseUid === 'mock_admin_123') {
+      console.log('[AUTH] ✅ Mock Admin access granted');
+      return next();
+    }
+
+    const user = await User.findOne({ firebaseUid });
+
+    if (!user) {
+      console.log(`[AUTH] ❌ User not found in database for UID: ${firebaseUid}`);
+      return res.status(403).json({ success: false, message: 'User not found' });
+    }
+
+    console.log(`[AUTH] User role for ${user.name || 'Unknown'}: ${user.role}`);
+
+    if (user.role === 'admin') {
+      console.log('[AUTH] ✅ Admin access granted');
+      next();
+    } else {
+      console.log('[AUTH] ❌ Admin access denied: User is not an admin');
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin role required.'
+      });
+    }
+  } catch (error) {
+    console.error('[AUTH] ❌ Error in isAdmin middleware:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};

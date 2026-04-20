@@ -12,7 +12,8 @@ const ImageSchema = new mongoose.Schema({
   angle: { type: Number, default: 0 },
   opacity: { type: Number, default: 1 },
   zIndex: { type: Number, default: 0 },
-  isBackground: { type: Boolean, default: false }
+  isBackground: { type: Boolean, default: false },
+  role: { type: String, default: 'none' }
 });
 
 const TextLayerSchema = new mongoose.Schema({
@@ -36,11 +37,13 @@ const TextLayerSchema = new mongoose.Schema({
   lineHeight: { type: Number, default: 1.16 },
   uppercase: { type: Boolean, default: false },
   strokeColor: { type: String, default: '#000000' },
-  strokeWidth: { type: Number, default: 0 }
+  strokeWidth: { type: Number, default: 0 },
+  role: { type: String, default: 'none' }
 });
 
 const templateSchema = new mongoose.Schema({
   name: { type: String, required: true },
+  type: { type: String, enum: ['CONTENT', 'BRAND_KIT'], default: 'CONTENT' },
   category: { type: String, required: true, default: 'General' },
   categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
   isHeroSection: { type: Boolean, default: false },

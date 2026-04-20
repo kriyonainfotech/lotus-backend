@@ -9,6 +9,8 @@ import adminRoutes from './routes/adminRoutes.js';
 import templateRoutes from './routes/templateRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
 import appSettingsRoutes from './routes/appSettingsRoutes.js';
+import purchaseRoutes from './routes/purchaseRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 import Industry from './models/Industry.js';
 import { initFirebase } from './config/firebaseAdmin.js';
 
@@ -61,6 +63,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/settings', appSettingsRoutes);
+app.use('/api/purchase', purchaseRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Database Connection
 const mongoURI = process.env.MONGODB_URI;

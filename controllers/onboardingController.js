@@ -1,6 +1,7 @@
 import Industry from '../models/Industry.js';
 import Business from '../models/Business.js';
 import User from '../models/User.js';
+import { sendWelcomeEmail } from '../services/emailService.js';
 
 /**
  * GET /api/onboarding/industries
@@ -80,6 +81,13 @@ export const completeUserProfile = async (req, res) => {
 
     if (!updatedUser) {
       return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Send Welcome Email (Non-blocking)
+    if (updatedUser.email) {
+      sendWelcomeEmail(updatedUser.email, updatedUser.name).catch(err => 
+        console.error('Error in sendWelcomeEmail trigger:', err)
+      );
     }
 
     return res.status(200).json({

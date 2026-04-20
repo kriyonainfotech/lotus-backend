@@ -40,6 +40,21 @@ const appSettingsSchema = new mongoose.Schema({
     type: String,
     default: 'https://lotus.digital/download'
   },
+  // SMTP Configuration
+  smtpHost: { type: String, default: '' },
+  smtpPort: { type: Number, default: 587 },
+  smtpUser: { type: String, default: '' },
+  smtpPass: { type: String, default: '' },
+  smtpFromEmail: { type: String, default: '' },
+  // Email Templates
+  welcomeEmailTemplate: {
+    subject: { type: String, default: 'Welcome to Lotus!' },
+    body: { type: String, default: 'Hi {{name}}, Welcome to Lotus! We are excited to have you onboard.' }
+  },
+  purchaseEmailTemplate: {
+    subject: { type: String, default: 'Plan Activated - Lotus Pro' },
+    body: { type: String, default: 'Hi {{name}}, Your {{planName}} has been activated successfully!' }
+  },
   updatedAt: { 
     type: Date, 
     default: Date.now 
