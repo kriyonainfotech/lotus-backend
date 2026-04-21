@@ -36,15 +36,24 @@ export const createTemplate = async (req, res) => {
   }
 };
 
-// Get all templates with filtering
+// Get all templates with filtering and pagination
 export const getTemplates = async (req, res) => {
   try {
-    const { category, hero, date, type } = req.query;
+    const { category, hero, date, type, q, platform, ratio, page = 1, limit = 20 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
     let query = {};
 
     if (type) query.type = type;
     if (category) query.categoryId = category;
+    if (platform) query.platform = platform;
+    if (ratio) query.ratio = ratio;
     if (hero === 'true') query.isHeroSection = true;
+
+    if (q) {
+      query.name = { $regex: q, $options: 'i' };
+    }
+
     if (date && date !== 'all' && date !== 'scheduled') {
       // Use $expr to compare only the date part (YYYY-MM-DD) to avoid timezone issues
       query.$expr = {
@@ -59,8 +68,22 @@ export const getTemplates = async (req, res) => {
 
     const templates = await Template.find(query)
       .populate('categoryId', 'name')
-      .sort({ createdAt: -1 });
-    res.json(templates);
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+      
+    const totalCount = await Template.countDocuments(query);
+    
+    // To maintain compatibility with older clients that expect a direct array,
+    // we can check a header or just always return the new format. 
+    // Given we are updating both, new format is better.
+    res.json({
+      templates,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(totalCount / limit),
+      totalTemplates: totalCount,
+      hasMore: skip + templates.length < totalCount
+    });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching templates', error: error.message });
   }
