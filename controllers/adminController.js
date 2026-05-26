@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import Business from '../models/Business.js';
+import Subscription from '../models/Subscription.js';
 
 // Get all users
 export const getAllUsers = async (req, res) => {
@@ -33,9 +34,38 @@ export const getAllUsers = async (req, res) => {
       businessMap[b.userId.toString()] = b;
     });
 
+    const subscriptions = await Subscription.find({ userId: { $in: userIds } })
+      .sort({ createdAt: -1 })
+      .populate('planId', 'name price durationDays')
+      .lean();
+
+    const now = new Date();
+    const activeSubscriptionMap = {};
+    const lastSubscriptionMap = {};
+
+    subscriptions.forEach((sub) => {
+      const uid = sub.userId.toString();
+      if (!lastSubscriptionMap[uid]) {
+        lastSubscriptionMap[uid] = sub;
+      }
+      const isActive =
+        sub.status === 'active' && new Date(sub.endDate) >= now;
+      if (isActive) {
+        const existing = activeSubscriptionMap[uid];
+        if (
+          !existing ||
+          new Date(sub.endDate) > new Date(existing.endDate)
+        ) {
+          activeSubscriptionMap[uid] = sub;
+        }
+      }
+    });
+
     const usersWithBusiness = users.map(user => ({
       ...user,
-      business: businessMap[user._id.toString()] || null
+      business: businessMap[user._id.toString()] || null,
+      activeSubscription: activeSubscriptionMap[user._id.toString()] || null,
+      lastSubscription: lastSubscriptionMap[user._id.toString()] || null,
     }));
 
     res.status(200).json({

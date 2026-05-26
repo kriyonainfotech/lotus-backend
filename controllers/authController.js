@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import Business from '../models/Business.js';
+import { getActiveSubscription } from '../services/subscriptionService.js';
 
 /**
  * POST /api/auth/sync
@@ -47,11 +48,14 @@ export const getCurrentUser = async (req, res) => {
 
     // Fetch business details
     const business = await Business.findOne({ userId: user._id }).populate('industryId', 'name icon');
+    const subscription = await getActiveSubscription(user._id);
 
     return res.status(200).json({
       success: true,
       user,
-      business: business || null
+      business: business || null,
+      subscription: subscription || null,
+      isPro: Boolean(subscription),
     });
   } catch (error) {
     console.error('Error fetching current user:', error);
