@@ -43,9 +43,16 @@ export const saveBusinessDetails = async (req, res) => {
       business.contactPhone = contactPhone || business.contactPhone;
       await business.save();
     } else {
+      let finalIndustryId = industryId;
+      if (!finalIndustryId) {
+        const defaultIndustry = await Industry.findOne();
+        if (defaultIndustry) {
+          finalIndustryId = defaultIndustry._id;
+        }
+      }
       business = await Business.create({
         userId: user._id,
-        industryId,
+        industryId: finalIndustryId,
         businessName,
         logoUrl,
         contactPhone,
