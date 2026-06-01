@@ -32,7 +32,7 @@ export const sendMassNotification = async (req, res) => {
       notification: {
         title,
         body,
-        ...(imageUrl && { imageUrl }),
+        ...(imageUrl && { image: imageUrl }), // Map to 'image' for FCM rich previews
       },
       tokens: tokens,
     };

@@ -21,6 +21,20 @@ const initFirebase = () => {
     return firebaseApp;
   }
 
+  // Method 1.5: Use environment variable JSON string if it exists (Perfect for Vercel/production)
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+      firebaseApp = admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+      console.log('✅ Firebase Admin initialized via FIREBASE_SERVICE_ACCOUNT env string');
+      return firebaseApp;
+    } catch (e) {
+      console.error('❌ Failed to parse FIREBASE_SERVICE_ACCOUNT env string:', e.message);
+    }
+  }
+
   // Method 2: Use GOOGLE_APPLICATION_CREDENTIALS env variable
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
     firebaseApp = admin.initializeApp({
