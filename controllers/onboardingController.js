@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Industry from '../models/Industry.js';
 import Business from '../models/Business.js';
 import User from '../models/User.js';
@@ -48,6 +49,8 @@ export const saveBusinessDetails = async (req, res) => {
         const defaultIndustry = await Industry.findOne();
         if (defaultIndustry) {
           finalIndustryId = defaultIndustry._id;
+        } else {
+          finalIndustryId = new mongoose.Types.ObjectId();
         }
       }
       business = await Business.create({
