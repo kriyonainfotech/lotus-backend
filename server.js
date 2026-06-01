@@ -50,11 +50,42 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+// Database Connection Middleware for Serverless / Vercel
+const connectDB = async (req, res, next) => {
+  if (mongoose.connection.readyState >= 1) {
+    return next();
+  }
+
+  try {
+    console.log('[Database] Connecting to MongoDB Atlas...');
+    const mongoURI = process.env.MONGODB_URI;
+    if (!mongoURI) {
+      console.error('CRITICAL ERROR: MONGODB_URI is not defined in environment variables.');
+    }
+    
+    await mongoose.connect(mongoURI || 'mongodb://127.0.0.1:27017/lotus_app', {
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s if Atlas is unreachable
+    });
+    console.log('[Database] Connected to MongoDB Atlas successfully.');
+    await seedIndustries();
+    next();
+  } catch (error) {
+    console.error('[Database] Connection Failure:', error.message);
+    res.status(500).json({
+      message: 'Database Connection Failed',
+      error: error.message,
+    });
+  }
+};
+
 // Global Logger for Debugging
 app.use((req, res, next) => {
   console.log(`[REQUEST] ${req.method} ${req.url}`);
   next();
 });
+
+// Apply database connection middleware to all API requests
+app.use(connectDB);
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -67,26 +98,6 @@ app.use('/api/settings', appSettingsRoutes);
 app.use('/api/purchase', purchaseRoutes);
 app.use('/api/plans', planRoutes);
 app.use('/api/notifications', notificationRoutes);
-
-// Database Connection
-const mongoURI = process.env.MONGODB_URI;
-
-if (!mongoURI) {
-  console.error('CRITICAL ERROR: MONGODB_URI is not defined in environment variables.');
-  console.log('Falling back to local mongodb for development check...');
-}
-
-mongoose.connect(mongoURI || 'mongodb://127.0.0.1:27017/lotus_app')
-  .then(async () => {
-    console.log('Successfully connected to MongoDB');
-    await seedIndustries();
-  })
-  .catch((err) => {
-    console.error('MONGODB CONNECTION ERROR:', err.message);
-    if (err.message.includes('buffering timed out')) {
-      console.error('Tip: Check if your database URI is correct and if your network allows the connection.');
-    }
-  });
 
 const seedIndustries = async () => {
   try {
